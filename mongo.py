@@ -358,7 +358,7 @@ def sell(cena,sell_window):
 #--- Dodawanie ---#
 def show_add():
     add_window = Toplevel(root)
-    add_window.geometry('350x600')
+    add_window.geometry('350x400')
     add_window.resizable(0,0)
     
     labels = {}
@@ -374,9 +374,120 @@ def show_add():
         entries[x].pack()
         entries[x].place(x=115,y=40*(i+1))
         i = i+1
+
+    zatwierdz = Button(add_window,text='Zatwierdź',width=30,command=lambda: poka(values))
+    zatwierdz.pack(side=BOTTOM, pady=20, padx=30)
     
+    d_p=Button(add_window,text='Dodaj tablicę',width=30,command=lambda: add_array(values))
+    d_p.pack(side=BOTTOM, padx=30)
+    
+    d_t=Button(add_window,text='Dodaj pole',width=30,command=lambda: add_key_value(values))
+    d_t.pack(side=BOTTOM, pady=10,padx=30)
+
+def add_key_value(values):
+    value_window = Toplevel(root)
+    value_window.geometry('120x150')
+    value_window.resizable(0,0)
+    value = StringVar()
+    key = StringVar()
+    
+    nazwa = Label(value_window,text='Nazwa')
+    nazwa.pack()
+    nazwa.place(x=35,y=5)
+    
+    wartosc = Label(value_window,text='Wartość')
+    wartosc.pack()
+    wartosc.place(x=35,y=55)
+    
+    nazwa_entry = Entry(value_window, textvariable=key,width=10)
+    nazwa_entry.pack()
+    nazwa_entry.place(x=30,y=30)
+    
+    wartosc_entry = Entry(value_window, textvariable=value,width=10)
+    wartosc_entry.pack()
+    wartosc_entry.place(x=30,y=80)
+    
+    d_t=Button(value_window,text='Zatwierdź',width=30,command=lambda: add_to_dict(key,value,values, value_window))
+    d_t.pack(side=BOTTOM, pady=10,padx=30)
+
+def add_to_dict(key,value,values,value_window):
+    values[key.get()] = value.get()
+    value_window.destroy()
+
+def add_array(values):
+    how_many_window = Toplevel(root)
+    how_many_window.geometry('200x200')
+    how_many_window.resizable(0,0)
+    
+    info = Label(how_many_window,text='Podaj ile pól ma zawierać tablica')
+    info.pack()
+    info.place(x=15,y=10)
+    ile = StringVar()
+    a_entry = Entry(how_many_window,textvariable=ile,width=10)
+    a_entry.pack()
+    a_entry.place(x=70,y=37)
+    
+    info2 = Label(how_many_window,text='Podaj nazwę tablicy')
+    info2.pack()
+    info2.place(x=50,y=77)
+    array_name = StringVar()
+    a_entry2 = Entry(how_many_window,textvariable=array_name,width=10)
+    a_entry2.pack()
+    a_entry2.place(x=70,y=104)
+    
+    
+    d=Button(how_many_window,text='Zatwierdź',width=10,command=lambda: check_how_many(array_name.get(),ile.get(), how_many_window,values))
+    d.pack(side=BOTTOM, pady=10)
     
 
+def check_how_many(array_name, ile, how_many_window,values):
+    try:
+        ile = int(ile)
+        if ile <= 0:
+            raise ValueError
+    except:
+        messagebox.showerror(title='Błąd',message='Podaj liczbę większą od 0.')
+        how_many_window.destroy()
+    else:
+        how_many_window.destroy()
+        show_entries(array_name, ile,values)
+
+def show_entries(array_name, ile,values):
+    array_window = Toplevel(root)
+    array_window.geometry('250x300')
+    entries = {}
+    labels = {}
+    object_array = []
+    for i in range(0,ile):
+        object_array.append(StringVar())
+        labels[i] = Label(array_window, text='{}:'.format(str(i)))
+        labels[i].pack()
+        labels[i].place(x=30, y=10+30*i)
+        entries[i] = Entry(array_window, textvariable=object_array[i])
+        entries[i].pack()
+        entries[i].place(x=70,y=10+30*i)
+    
+    
+        
+        
+    zat=Button(array_window,text='Zatwierdź',width=10,command=lambda: add_array_to_val(object_array,array_name,array_window,values))
+    zat.pack(side=BOTTOM,pady=10)
+
+
+def add_array_to_val(object_array,name,window,values):
+    array = []
+    for i in range(0,len(object_array)):
+        array.append(object_array[i].get())
+    values[name] = array
+    window.destroy()
+    
+def poka(values):
+    for key,value in values.items():
+        if type(value) == str or type(value) == list:
+            print('{}: {}\n'.format(key,value))
+           
+        else:
+            print('{}: {}\n'.format(key,value.get()))
 # * * * Okno * * *
 root = Tk()
 root.title("KomisDB")  # ustawienie tytułu okna głównego
