@@ -350,10 +350,31 @@ def sell(cena,sell_window):
     except:
          messagebox.showerror(title='Błąd',message="Wprowadź poprawną liczbę")
     else:
-        db[str(coll)].update_one({'_id': ind},{'$set': {'Sprzedano dnia': datetime.datetime.now('YYYY-MM-DD'),'Sprzedane': True, 'Cena': cena.get()}})
+        db[str(coll)].update_one({'_id': ind},{'$set': {'Sprzedano dnia': datetime.datetime.now(),'Sprzedane': True, 'Cena': cena.get()}})
         ct_listbox.delete(0, END)
     finally:
         sell_window.destroy()
+
+#--- Dodawanie ---#
+def show_add():
+    add_window = Toplevel(root)
+    add_window.geometry('350x600')
+    add_window.resizable(0,0)
+    
+    labels = {}
+    entries = {}
+    values = {}
+    i = 0
+    for x in ('Marka', 'Model','Rok', 'Cena', 'Uszkodzony'):
+        values[x] = StringVar()
+        labels[x] = Label(add_window,text=x)
+        labels[x].pack()
+        labels[x].place(x=40,y=40*(i+1))
+        entries[x] = Entry(add_window,textvariable=values[x])
+        entries[x].pack()
+        entries[x].place(x=115,y=40*(i+1))
+        i = i+1
+    
     
 
 # * * * Okno * * *
@@ -434,7 +455,7 @@ c_osobowe()
 wyszuk=Button(root,text='Wyszukiwanie',width=30,command=criteria)
 wyszuk.pack(side=TOP, anchor=NE, pady=30, padx=30)
 
-dodaj=Button(root,text='Dodaj',width=30,command=criteria)
+dodaj=Button(root,text='Dodaj',width=30,command=show_add)
 dodaj.pack(side=TOP, anchor=NE, pady=5, padx=30)
 
 usun=Button(root,text='Usuń',width=30,command=check_def)
