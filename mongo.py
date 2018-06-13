@@ -27,13 +27,20 @@ def sold():
 #--- funkcje przycisków wyboru typu pojazdu---
 def c_osobowe():
     show_listbox('Osobowe')
+    reset_search()
 def c_uzytkowe():
     show_listbox('Uzytkowe')
+    reset_search()
 def c_motocykle():
     show_listbox('Motocykle')
+    reset_search()
 def c_przyczepy():
     show_listbox('Przyczepy')
+    reset_search()
 
+def reset_search():
+    global szukane
+    szukane = False
 def create_indexes():
     for name in ('Osobowe','Uzytkowe', 'Motocykle', 'Przyczepy'):
         db[str(name)].create_index([('Marka', TEXT),
@@ -45,7 +52,7 @@ def show_listbox(collection):
     ct_listbox.delete(0, END)
     global coll
     coll=collection
-    items = db[str(collection)].find({'Sprzedane':mode}).sort([('Marka',1)])
+    items = db[str(collection)].find({'Sprzedane':mode})
 
     for item in items:
         keys = list(item.keys())
@@ -115,6 +122,9 @@ def criteria():
 def wyszukiwanie():
     '''Wyszukanie według kryterium oraz przyklejenie wyników na listę'''
     crit_window.destroy()
+    global dic
+    global szukane
+    szukane = True
     dic = {}
     cen = {}
     if len(marka.get()) > 0:
@@ -133,18 +143,25 @@ def wyszukiwanie():
     dic["Sprzedane"] = mode
     print(dic)
     ct_listbox.delete(0, END)
-    items = db[str(coll)].find(dic)
-    for item in items:
+    detail.delete(0, END)
+    global _items
+    _items = db[str(coll)].find(dic)
+    
+    
+    print(str(_items.count()))
+    for item in _items:
         keys = list(item.keys())
         x1 = item[str(keys[1])]
         x2 = item[str(keys[2])]
         x3 = item[str(keys[3])]
         x4 = item[str(keys[4])]
         ct_listbox.insert(END, "{} {} {} {} ".format(x1, x2, x3, x4))
-    
-    if items.count == 0:
+        
+    if _items.count == 0:
         ct_listbox.delete(0,END)
         detail.delete(0, END)
+        
+    
 
 #---edycja pojazdu---
 def edit(event):
@@ -259,6 +276,9 @@ def listboxselect(event):
         global ind
         index = int(w.curselection()[0])
         item = itemss[index]
+        if szukane:
+            _szukane = db[str(coll)].find(dic)
+            item = _szukane[index]
         detail.configure(state="normal")
         detail.delete('1.0', END)
         keys = list(item.keys())
@@ -346,17 +366,20 @@ def check_sell():
 def sell(cena,sell_window):
     try:
         print(str(cena.get()))
-        int(cena.get())
+        cen = int(cena.get())
     except:
          messagebox.showerror(title='Błąd',message="Wprowadź poprawną liczbę")
     else:
-        db[str(coll)].update_one({'_id': ind},{'$set': {'Sprzedano dnia': datetime.datetime.now(),'Sprzedane': True, 'Cena': cena.get()}})
+        db[str(coll)].update_one({'_id': ind},{'$set': {'Sprzedano dnia': datetime.datetime.now(),'Sprzedane': True, 'Cena': cen}})
         ct_listbox.delete(0, END)
     finally:
         sell_window.destroy()
 
 #--- Dodawanie ---#
 def show_add():
+    if mode:
+        messagebox.showerror(title='Błąd',message="Możesz dodać tylko niesprzedane auto")
+        return
     add_window = Toplevel(root)
     add_window.geometry('350x400')
     add_window.resizable(0,0)
@@ -375,7 +398,7 @@ def show_add():
         entries[x].place(x=115,y=40*(i+1))
         i = i+1
 
-    zatwierdz = Button(add_window,text='Zatwierdź',width=30,command=lambda: poka(values))
+    zatwierdz = Button(add_window,text='Zatwierdź',width=30,command=lambda: check_new_doc(values,add_window))
     zatwierdz.pack(side=BOTTOM, pady=20, padx=30)
     
     d_p=Button(add_window,text='Dodaj tablicę',width=30,command=lambda: add_array(values))
@@ -467,9 +490,6 @@ def show_entries(array_name, ile,values):
         entries[i].pack()
         entries[i].place(x=70,y=10+30*i)
     
-    
-        
-        
     zat=Button(array_window,text='Zatwierdź',width=10,command=lambda: add_array_to_val(object_array,array_name,array_window,values))
     zat.pack(side=BOTTOM,pady=10)
 
@@ -481,13 +501,38 @@ def add_array_to_val(object_array,name,window,values):
     values[name] = array
     window.destroy()
     
-def poka(values):
-    for key,value in values.items():
-        if type(value) == str or type(value) == list:
-            print('{}: {}\n'.format(key,value))
-           
-        else:
-            print('{}: {}\n'.format(key,value.get()))
+def check_new_doc(values,add_window):
+    try:
+        for key,value in values.items():
+            if not (type(value) == str or type(value) == list):
+                values[key] = value.get()
+                if key in ('Cena', 'Rok'):
+                    values[key] = int(values[key])
+                elif key == 'Uszkodzony':
+                    if values[key].upper() == 'TAK':
+                        values[key] = True
+                    elif values[key].upper() == 'NIE':
+                        values[key] = False
+                    else:
+                        raise ValueError('Formatowanie uszkodzony {} != {}'.format(values[key].upper,values[key]))
+            if len(str(values[key])) == 0:
+                raise ValueError('Długość {}'.format(str(values[key])))
+    except Exception as error:
+        messagebox.showerror(title='Błąd',message='Wypełnij luki poprawnymi danymi.')# + repr(error))
+    else:
+        add_new_doc(values)
+    finally:
+        add_window.destroy()
+        return
+        
+
+def add_new_doc(values):
+    values['Sprzedane'] = False
+    print(values)
+    idd = db[str(coll)].insert_one(values).inserted_id
+    messagebox.showerror(title='Dodanie',message='Pomyślnie dodano dokument')
+    ct_listbox.delete(0,END)
+
 # * * * Okno * * *
 root = Tk()
 root.title("KomisDB")  # ustawienie tytułu okna głównego
