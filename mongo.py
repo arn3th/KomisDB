@@ -301,7 +301,8 @@ def listboxselect(event):
         detail.configure(state="disabled")
     
 #---Usuniecie---#
-def check_def(): 
+def check_def():
+    ''' Sprawdza czy został wybrany samochód do usunięcia. '''
     try:
         ind
     except:
@@ -310,6 +311,7 @@ def check_def():
         delete_window()
 
 def delete_window():
+    ''' Definicja okna do usuwania pojazdu. '''
     del_window = Toplevel(root)
     del_window.geometry('220x120')
     del_window.resizable(0,0)
@@ -327,6 +329,7 @@ def delete_window():
     label.place(x=25,y=15)
    
 def delete(del_window):
+    '''Usunięcie danej z bazy i wyłączenie okna.'''
     del_window.destroy()
     dic = {}
     dic['_id'] = ind
@@ -335,6 +338,8 @@ def delete(del_window):
     
 #--- Sprzedaz ---#
 def check_sell():
+    '''Sprawdza czy wybrano poprawny pojazd do sprzedania
+     oraz tworzy okno sprzedazy'''
     
     cena = StringVar()
     try:
@@ -364,6 +369,7 @@ def check_sell():
         t.place(x=67,y=90)
     
 def sell(cena,sell_window):
+    '''Zmiana wartości 'Sprzedane' na True'''
     try:
         print(str(cena.get()))
         cen = int(cena.get())
@@ -377,6 +383,7 @@ def sell(cena,sell_window):
 
 #--- Dodawanie ---#
 def show_add():
+    '''Definiuje okienko dodawnia.'''
     if mode:
         messagebox.showerror(title='Błąd',message="Możesz dodać tylko niesprzedane auto")
         return
@@ -502,6 +509,7 @@ def add_array_to_val(object_array,name,window,values):
     window.destroy()
     
 def check_new_doc(values,add_window):
+    '''Formatowanie odpowiednich pól na int, usunięcie okna dodawania'''
     try:
         for key,value in values.items():
             if not (type(value) == str or type(value) == list):
@@ -527,6 +535,7 @@ def check_new_doc(values,add_window):
         
 
 def add_new_doc(values):
+    '''Dodanie nowego dokumentu do bazy'''
     values['Sprzedane'] = False
     print(values)
     idd = db[str(coll)].insert_one(values).inserted_id
